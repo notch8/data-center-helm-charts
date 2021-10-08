@@ -37,6 +37,7 @@ Kubernetes: `>=1.19.x-0`
 | crowd.additionalVolumeMounts | list | `[]` | Defines any additional volumes mounts for the Crowd container. These can refer to existing volumes, or new volumes can be defined in volumes.additional. |
 | crowd.clustering.enabled | bool | `false` | Set to 'true' if Data Center clustering should be enabled This will automatically configure cluster peer discovery between cluster nodes. |
 | crowd.clustering.usePodNameAsClusterNodeName | bool | `true` | Set to 'true' if the K8s pod name should be used as the end-user-visible name of the Data Center cluster node. |
+| crowd.containerSecurityContext | object | `{}` | Standard K8s field that holds security configurations that will be applied to a container. https://kubernetes.io/docs/tasks/configure-pod-container/security-context/ |
 | crowd.ports.hazelcast | int | `5701` | The port on which the Crowd container listens for Hazelcast traffic |
 | crowd.ports.http | int | `8095` | The port on which the Crowd container listens for HTTP traffic |
 | crowd.readinessProbe.failureThreshold | int | `30` | The number of consecutive failures of the Crowd container readiness probe before the pod fails readiness checks. |
@@ -46,8 +47,7 @@ Kubernetes: `>=1.19.x-0`
 | crowd.resources.container.requests.memory | string | `"1G"` | Initial Memory request by Crowd pod |
 | crowd.resources.jvm.maxHeap | string | `"768m"` | The maximum amount of heap memory that will be used by the Crowd JVM |
 | crowd.resources.jvm.minHeap | string | `"384m"` | The minimum amount of heap memory that will be used by the Crowd JVM |
-| crowd.securityContext.enabled | bool | `true` | Set to 'true' to enable the security context |
-| crowd.securityContext.gid | string | `"2004"` | The GID used by the Crowd docker image |
+| crowd.securityContext.fsGroup | int | `2004` | The GID used by the Crowd docker image If not supplied, will default to 2004 This is intended to ensure that the shared-home volume is group-writeable by the GID used by the Crowd container. However, this doesn't appear to work for NFS volumes due to a K8s bug: https://github.com/kubernetes/examples/issues/260 |
 | crowd.service.annotations | object | `{}` | Additional annotations to apply to the Service |
 | crowd.service.port | int | `80` | The port on which the Crowd K8s Service will listen |
 | crowd.service.type | string | `"ClusterIP"` | The type of K8s service to use for Crowd |
@@ -70,6 +70,7 @@ Kubernetes: `>=1.19.x-0`
 | image.repository | string | `"atlassian/crowd"` | The Docker Crowd Docker image to use https://hub.docker.com/r/atlassian/crowd |
 | image.tag | string | `"4.2.2"` | The docker image tag to be used |
 | ingress.annotations | object | `{}` | The custom annotations that should be applied to the Ingress Resource when NOT using the K8s ingress-nginx controller. |
+| ingress.className | string | `"nginx"` | The class name used by the ingress controller if it's being used. Please follow documenation of your ingress controller. If the cluster  contains multiple ingress controllers, this setting allows you to control which of them is used for Atlassian application traffic. |
 | ingress.create | bool | `false` | Set to 'true' if an Ingress Resource should be created. This depends on a pre-provisioned Ingress Controller being available. |
 | ingress.host | string | `nil` | The fully-qualified hostname (FQDN) of the Ingress Resource. Traffic coming in on this hostname will be routed by the Ingress Resource to the appropriate backend Service. |
 | ingress.https | bool | `true` | Set to 'true' if browser communication with the application should be TLS (HTTPS) enforced. |

@@ -81,8 +81,6 @@ spec:
       serviceAccountName: unittest-bamboo
       terminationGracePeriodSeconds: 30
       securityContext:
-        # This is intended to ensure that the shared-home volume is group-writeable by the GID used by the Bamboo container.
-        # However, this doesn't appear to work for NFS volumes due to a K8s bug: https://github.com/kubernetes/examples/issues/260
         fsGroup: 2005
       initContainers:
         - name: nfs-permission-fixer
@@ -96,7 +94,7 @@ spec:
           command: ["sh", "-c", "(chgrp 2005 /shared-home; chmod g+w /shared-home)"]
       containers:
         - name: bamboo
-          image: "atlssmith/bamboo:8.0.1-jdk11"
+          image: "atlassian/bamboo:8.0.1-jdk11"
           imagePullPolicy: IfNotPresent
           env:
             - name: ATL_TOMCAT_SCHEME
@@ -210,7 +208,7 @@ spec:
       image: debian:stable-slim
       imagePullPolicy: IfNotPresent
       securityContext:
-        # Slightly dodgy; we assume that the UID and GID used by the product images are the same, which in practice they are
+        # We assume that the UID and GID used by the product images are the same, which in practice they are
         runAsUser: 2005
         runAsGroup: 2005
       volumeMounts:

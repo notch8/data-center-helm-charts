@@ -1,5 +1,3 @@
-🚧 These charts are currently under construction! 🚧
-
 # bamboo
 
 ![Version: 0.0.1](https://img.shields.io/badge/Version-0.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 8.0.1-jdk11](https://img.shields.io/badge/AppVersion-8.0.1--jdk11-informational?style=flat-square)
@@ -14,7 +12,6 @@ For installation please follow [the documentation](https://atlassian.github.io/d
 
 * <https://github.com/atlassian-labs/data-center-helm-charts>
 * <https://bitbucket.org/atlassian-docker/docker-bamboo-server>
-* <https://bitbucket.org/atlassian-docker/docker-bamboo-agent-base>
 
 ## Requirements
 
@@ -31,12 +28,13 @@ Kubernetes: `>=1.19.x-0`
 | affinity | object | `{}` | Standard K8s affinities that will be applied to all Bamboo pods |
 | bamboo.accessLog.localHomeSubPath | string | `"log"` | The subdirectory within the local-home volume where access logs should be  stored. |
 | bamboo.accessLog.mountPath | string | `"/opt/atlassian/bamboo/logs"` | The path within the Bamboo container where the local-home volume should be  mounted in order to capture access logs. |
-| bamboo.additionalBundledPlugins | list | `[]` | Specifies a list of additional Bambop plugins that should be added to the Bamboo container. Note plugins installed via this method will appear as bundled plugins rather than user plugins. These should be specified in the same manner as the 'additionalLibraries' property. Additional details: https://atlassian.github.io/data-center-helm-charts/examples/external_libraries/EXTERNAL_LIBS/ NOTE: only .jar files can be loaded using this approach. OBR's can be extracted (unzipped) to access the associated .jar An alternative to this method is to install the plugins via "Manage Apps" in the product system administration UI. |
+| bamboo.additionalBundledPlugins | list | `[]` | Specifies a list of additional Bamboo plugins that should be added to the Bamboo container. Note plugins installed via this method will appear as bundled plugins rather than user plugins. These should be specified in the same manner as the 'additionalLibraries' property. Additional details: https://atlassian.github.io/data-center-helm-charts/examples/external_libraries/EXTERNAL_LIBS/ NOTE: only .jar files can be loaded using this approach. OBR's can be extracted (unzipped) to access the associated .jar An alternative to this method is to install the plugins via "Manage Apps" in the product system administration UI. |
 | bamboo.additionalEnvironmentVariables | list | `[]` | Defines any additional environment variables to be passed to the Bamboo  container. See https://hub.docker.com/r/atlassian/bamboo-server for  supported variables. |
 | bamboo.additionalJvmArgs[0] | string | `"-XX:ActiveProcessorCount=2"` | The value defined for ActiveProcessorCount should correspond to that provided  for 'container.requests.cpu'. https://docs.oracle.com/en/java/javase/11/tools/java.html#GUID-3B1CE181-CD30-4178-9602-230B800D4FAE |
 | bamboo.additionalLibraries | list | `[]` | Specifies a list of additional Java libraries that should be added to the Bamboo container. Each item in the list should specify the name of the volume that contains the library, as well as the name of the library file within that volume's root directory. Optionally, a subDirectory field can be included to specify which directory in the volume contains the library file. Additional details: https://atlassian.github.io/data-center-helm-charts/examples/external_libraries/EXTERNAL_LIBS/ |
 | bamboo.additionalVolumeMounts | list | `[]` | Defines any additional volumes mounts for the Bamboo container. These  can refer to existing volumes, or new volumes can be defined via  'volumes.additional'. |
 | bamboo.clustering.enabled | bool | `false` | Set to 'true' if Data Center clustering should be enabled This will automatically configure cluster peer discovery between cluster nodes. |
+| bamboo.containerSecurityContext | object | `{}` | Standard K8s field that holds security configurations that will be applied to a container. https://kubernetes.io/docs/tasks/configure-pod-container/security-context/ |
 | bamboo.license.secretKey | string | `"license-key"` | The key in the K8s Secret that contains the Bamboo license key |
 | bamboo.license.secretName | string | `nil` | The name of the K8s Secret that contains the Bamboo license key. If specified, then  the license will be automatically populated during Bamboo setup. Otherwise, it will  need to be provided via the browser after initial startup. An Example of creating  a K8s secret for the license below: 'kubectl create secret generic <secret-name> --from-literal=license-key=<license>  https://kubernetes.io/docs/concepts/configuration/secret/#opaque-secrets |
 | bamboo.ports.http | int | `8085` | The port on which the Bamboo container listens for HTTP traffic |
@@ -48,8 +46,7 @@ Kubernetes: `>=1.19.x-0`
 | bamboo.resources.container.requests.memory | string | `"2G"` | Initial Memory request by Bamboo pod |
 | bamboo.resources.jvm.maxHeap | string | `"1024m"` | The maximum amount of heap memory that will be used by the Bamboo JVM |
 | bamboo.resources.jvm.minHeap | string | `"512m"` | The minimum amount of heap memory that will be used by the Bamboo JVM |
-| bamboo.securityContext.enabled | bool | `true` | Set to 'true' to enable the security context |
-| bamboo.securityContext.gid | string | `"2005"` | The GID used by the Bamboo docker image |
+| bamboo.securityContext.fsGroup | int | `2005` | The GID used by the Bamboo docker image If not supplied, will default to 2005. This is intended to ensure that the shared-home volume is group-writeable by the GID used by the Bamboo container. However, this doesn't appear to work for NFS volumes due to a K8s bug: https://github.com/kubernetes/examples/issues/260 |
 | bamboo.service.annotations | object | `{}` | Additional annotations to apply to the Service |
 | bamboo.service.contextPath | string | `nil` | The Tomcat context path that Bamboo will use. The ATL_TOMCAT_CONTEXTPATH  will be set automatically. |
 | bamboo.service.port | int | `80` | The port on which the Bamboo K8s Service will listen |
@@ -66,22 +63,23 @@ Kubernetes: `>=1.19.x-0`
 | fluentd.customConfigFile | bool | `false` | Set to 'true' if a custom config (see 'configmap-fluentd.yaml' for default)  should be used for Fluentd. If enabled this config must supplied via the  'fluentdCustomConfig' property below. |
 | fluentd.elasticsearch.enabled | bool | `true` | Set to 'true' if Fluentd should send all log events to an Elasticsearch service. |
 | fluentd.elasticsearch.hostname | string | `"elasticsearch"` | The hostname of the Elasticsearch service that Fluentd should send logs to. |
-| fluentd.elasticsearch.indexNamePrefix | string | `"Bamboo"` | The prefix of the Elasticsearch index name that will be used |
+| fluentd.elasticsearch.indexNamePrefix | string | `"bamboo"` | The prefix of the Elasticsearch index name that will be used |
 | fluentd.enabled | bool | `false` | Set to 'true' if the Fluentd sidecar (DaemonSet) should be added to each pod |
 | fluentd.extraVolumes | list | `[]` | Specify custom volumes to be added to Fluentd container (e.g. more log sources) |
 | fluentd.fluentdCustomConfig | object | `{}` | Custom fluent.conf file |
 | fluentd.httpPort | int | `9880` | The port on which the Fluentd sidecar will listen |
 | fluentd.imageName | string | `"fluent/fluentd-kubernetes-daemonset:v1.11.5-debian-elasticsearch7-1.2"` | The Fluentd sidecar image |
 | image.pullPolicy | string | `"IfNotPresent"` | Image pull policy |
-| image.repository | string | `"atlssmith/bamboo"` | The Bamboo Docker image to use https://hub.docker.com/r/atlassian/bamboo-server |
+| image.repository | string | `"atlassian/bamboo"` | The Bamboo Docker image to use https://hub.docker.com/r/atlassian/bamboo-server |
 | image.tag | string | `""` | The docker image tag to be used - defaults to the Chart appVersion |
 | ingress.annotations | object | `{}` | The custom annotations that should be applied to the Ingress Resource  when NOT using the K8s ingress-nginx controller. |
+| ingress.className | string | `"nginx"` | The class name used by the ingress controller if it's being used. Please follow documenation of your ingress controller. If the cluster  contains multiple ingress controllers, this setting allows you to control which of them is used for Atlassian application traffic. |
 | ingress.create | bool | `false` | Set to 'true' if an Ingress Resource should be created. This depends on a  pre-provisioned Ingress Controller being available.  |
 | ingress.host | string | `nil` | The fully-qualified hostname (FQDN) of the Ingress Resource. Traffic coming in on  this hostname will be routed by the Ingress Resource to the appropriate backend  Service. |
 | ingress.https | bool | `true` | Set to 'true' if browser communication with the application should be TLS  (HTTPS) enforced. |
 | ingress.maxBodySize | string | `"250m"` | The max body size to allow. Requests exceeding this size will result in an HTTP 413 error being returned to the client. |
 | ingress.nginx | bool | `true` | Set to 'true' if the Ingress Resource is to use the K8s 'ingress-nginx'  controller.  https://kubernetes.github.io/ingress-nginx/ This will populate the Ingress Resource with annotations that are specific to  the K8s ingress-nginx controller. Set to 'false' if a different controller is  to be used, in which case the appropriate annotations for that controller must  be specified below under 'ingress.annotations'. |
-| ingress.path | string | `"/"` | The base path for the Ingress Resource. For example '/bamboo'. Based on a  'ingress.host' value of 'company.k8s.com' this would result in a URL of  'company.k8s.com/bamboo'. Default value is 'bamboo.service.contextpath' |
+| ingress.path | string | `nil` | The base path for the Ingress Resource. For example '/bamboo'. Based on a  'ingress.host' value of 'company.k8s.com' this would result in a URL of  'company.k8s.com/bamboo'. Default value is 'bamboo.service.contextPath' |
 | ingress.tlsSecretName | string | `nil` | The name of the K8s Secret that contains the TLS private key and corresponding  certificate. When utilised, TLS termination occurs at the ingress point where  traffic to the Service and it's Pods is in plaintext.  Usage is optional and depends on your use case. The Ingress Controller itself  can also be configured with a TLS secret for all Ingress Resources. https://kubernetes.io/docs/concepts/configuration/secret/#tls-secrets https://kubernetes.io/docs/concepts/services-networking/ingress/#tls |
 | nodeSelector | object | `{}` | Standard K8s node-selectors that will be applied to all Bamboo pods |
 | podAnnotations | object | `{}` | Custom annotations that will be applied to all Bamboo pods |

@@ -1,0 +1,460 @@
+---
+# Source: bitbucket/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: abrokes-bitbucket
+  labels:
+    helm.sh/chart: bitbucket-1.0.0
+    app.kubernetes.io/name: bitbucket
+    app.kubernetes.io/instance: abrokes-bitbucket
+    app.kubernetes.io/version: "7.15.1-jdk11"
+    app.kubernetes.io/managed-by: Helm
+    
+imagePullSecrets:
+  - name: regcred
+---
+# Source: bitbucket/templates/config-jvm.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: abrokes-bitbucket-jvm-config
+  labels:
+    helm.sh/chart: bitbucket-1.0.0
+    app.kubernetes.io/name: bitbucket
+    app.kubernetes.io/instance: abrokes-bitbucket
+    app.kubernetes.io/version: "7.15.1-jdk11"
+    app.kubernetes.io/managed-by: Helm
+    
+data:
+  additional_jvm_args: >-
+    -Dfeature.getting.started.page=false
+    -XX:ActiveProcessorCount=2
+  max_heap: 1g
+  min_heap: 512m
+---
+# Source: bitbucket/templates/shared-home-pv.yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: abrokes-bitbucket-shared-home-pv
+  labels:
+    helm.sh/chart: bitbucket-1.0.0
+    app.kubernetes.io/name: bitbucket
+    app.kubernetes.io/instance: abrokes-bitbucket
+    app.kubernetes.io/version: "7.15.1-jdk11"
+    app.kubernetes.io/managed-by: Helm
+    
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteMany
+  mountOptions:
+    - rw
+    - nfsvers=3
+    - lookupcache=pos
+    - noatime
+    - intr
+    - rsize=32768
+    - wsize=32768
+    - _netdev
+  nfs:
+    path: /srv/nfs
+    server: 172.20.165.56
+---
+# Source: bitbucket/templates/shared-home-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: abrokes-bitbucket-shared-home
+  labels:
+    helm.sh/chart: bitbucket-1.0.0
+    app.kubernetes.io/name: bitbucket
+    app.kubernetes.io/instance: abrokes-bitbucket
+    app.kubernetes.io/version: "7.15.1-jdk11"
+    app.kubernetes.io/managed-by: Helm
+    
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ""
+  volumeName: abrokes-bitbucket-shared-home-pv
+  resources:
+    requests:
+      storage: 1Gi
+---
+# Source: bitbucket/templates/clusterrole.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: abrokes-bitbucket
+  labels:
+    helm.sh/chart: bitbucket-1.0.0
+    app.kubernetes.io/name: bitbucket
+    app.kubernetes.io/instance: abrokes-bitbucket
+    app.kubernetes.io/version: "7.15.1-jdk11"
+    app.kubernetes.io/managed-by: Helm
+    
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - endpoints
+      - pods
+      - nodes
+    verbs:
+      - get
+      - list
+---
+# Source: bitbucket/templates/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: abrokes-bitbucket
+  labels:
+    helm.sh/chart: bitbucket-1.0.0
+    app.kubernetes.io/name: bitbucket
+    app.kubernetes.io/instance: abrokes-bitbucket
+    app.kubernetes.io/version: "7.15.1-jdk11"
+    app.kubernetes.io/managed-by: Helm
+    
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: abrokes-bitbucket
+subjects:
+  - kind: ServiceAccount
+    name: abrokes-bitbucket
+    namespace: dcng
+---
+# Source: bitbucket/templates/service-ssh.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: abrokes-bitbucket-ssh
+  labels:
+    helm.sh/chart: bitbucket-1.0.0
+    app.kubernetes.io/name: bitbucket
+    app.kubernetes.io/instance: abrokes-bitbucket
+    app.kubernetes.io/version: "7.15.1-jdk11"
+    app.kubernetes.io/managed-by: Helm
+    
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: abrokes-bitbucket-ssh.dcngkube.bbsperf.com
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
+    service.beta.kubernetes.io/aws-load-balancer-scheme: internal
+    service.beta.kubernetes.io/aws-load-balancer-type: external
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 22
+      targetPort: ssh
+      protocol: TCP
+      name: ssh
+  selector:
+    app.kubernetes.io/name: bitbucket
+    app.kubernetes.io/instance: abrokes-bitbucket
+---
+# Source: bitbucket/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: abrokes-bitbucket
+  labels:
+    helm.sh/chart: bitbucket-1.0.0
+    app.kubernetes.io/name: bitbucket
+    app.kubernetes.io/instance: abrokes-bitbucket
+    app.kubernetes.io/version: "7.15.1-jdk11"
+    app.kubernetes.io/managed-by: Helm
+    
+  annotations:
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+    - port: 7999
+      targetPort: ssh
+      protocol: TCP
+      name: ssh
+    - port: 5701
+      targetPort: hazelcast
+      protocol: TCP
+      name: hazelcast
+  selector:
+    app.kubernetes.io/name: bitbucket
+    app.kubernetes.io/instance: abrokes-bitbucket
+---
+# Source: bitbucket/templates/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: abrokes-bitbucket
+  labels:
+    helm.sh/chart: bitbucket-1.0.0
+    app.kubernetes.io/name: bitbucket
+    app.kubernetes.io/instance: abrokes-bitbucket
+    app.kubernetes.io/version: "7.15.1-jdk11"
+    app.kubernetes.io/managed-by: Helm
+    
+spec:
+  replicas: 2
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      partition: 0
+  serviceName: abrokes-bitbucket
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: bitbucket
+      app.kubernetes.io/instance: abrokes-bitbucket
+  template:
+    metadata:
+      annotations:
+        checksum/config-jvm: 5fcd70a7727cfeb41b983c9361ab0e41cdff2dfdbdc757aa168d9959db5ca26c
+      labels:
+        app.kubernetes.io/name: bitbucket
+        app.kubernetes.io/instance: abrokes-bitbucket
+    spec:
+      serviceAccountName: abrokes-bitbucket
+      terminationGracePeriodSeconds: 35
+      securityContext:
+        
+        
+        fsGroup: 2003
+      initContainers:
+        
+        - name: nfs-permission-fixer
+          image: alpine
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 0 # make sure we run as root so we get the ability to change the volume permissions
+          volumeMounts:
+            - name: shared-home
+              mountPath: "/shared-home"
+          command: ["sh", "-c", "(chgrp 2003 /shared-home; chmod g+w /shared-home)"]
+      containers:
+        - name: bitbucket
+          image: "atlassian/bitbucket:7.15.1-jdk11"
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 7990
+              protocol: TCP
+            - name: ssh
+              containerPort: 7999
+              protocol: TCP
+            - name: hazelcast
+              containerPort: 5701
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              port: 7990
+              path: "/status"
+            periodSeconds: 5
+            failureThreshold: 60
+            initialDelaySeconds: 10
+          volumeMounts:
+            - name: local-home
+              mountPath: "/var/atlassian/application-data/bitbucket"
+            - name: shared-home
+              mountPath: "/var/atlassian/application-data/shared-home"
+            
+            
+            
+          resources:
+            requests:
+              cpu: "2"
+              memory: 3G
+          env:
+            - name: KUBE_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            
+            - name: KUBERNETES_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: HAZELCAST_KUBERNETES_SERVICE_NAME
+              value: "abrokes-bitbucket"
+            - name: HAZELCAST_NETWORK_KUBERNETES
+              value: "true"
+            - name: HAZELCAST_PORT
+              value: "5701"
+            
+            
+            
+            - name: JDBC_DRIVER
+              value: "org.postgresql.Driver"
+            
+            
+            - name: JDBC_URL
+              value: "jdbc:postgresql://abrokes-bitbucket-pgsql:5432/bitbucket"
+            
+            
+            - name: JDBC_USER
+              valueFrom:
+                secretKeyRef:
+                  name: bitbucket-database-credentials
+                  key: username
+            - name: JDBC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: bitbucket-database-credentials
+                  key: password
+            
+            
+            
+            
+            - name: SETUP_SYSADMIN_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: bitbucket-sysadmin-credentials
+                  key: username
+            - name: SETUP_SYSADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: bitbucket-sysadmin-credentials
+                  key: password
+            - name: SETUP_SYSADMIN_DISPLAYNAME
+              valueFrom:
+                secretKeyRef:
+                  name: bitbucket-sysadmin-credentials
+                  key: displayName
+            - name: SETUP_SYSADMIN_EMAILADDRESS
+              valueFrom:
+                secretKeyRef:
+                  name: bitbucket-sysadmin-credentials
+                  key: emailAddress
+            
+            
+            
+            
+            - name: ELASTICSEARCH_ENABLED
+              value: "false"
+            - name: PLUGIN_SEARCH_ELASTICSEARCH_BASEURL
+              value: "http://abrokes-bitbucket-elasticsearch-master:9200"
+            
+            
+            
+            
+            - name: SERVER_PROXY_NAME
+              value: "abrokes-bitbucket.dcngkube.bbsperf.com"
+            - name: SERVER_PROXY_PORT
+              value: "443"
+            - name: SETUP_BASEURL
+              value: "https://abrokes-bitbucket.dcngkube.bbsperf.com"
+            
+            - name: SERVER_CONTEXT_PATH
+              value: "/"
+            
+            - name: SERVER_SCHEME
+              value: "https"
+            - name: SERVER_SECURE
+              value: "true"
+            
+            - name: SET_PERMISSIONS
+              value: "true"
+            - name: BITBUCKET_SHARED_HOME
+              value: "/var/atlassian/application-data/shared-home"
+            
+            - name: SETUP_LICENSE
+              valueFrom:
+                secretKeyRef:
+                  name: bitbucket-license
+                  key: license-key
+            
+            - name: JVM_MINIMUM_MEMORY
+              valueFrom:
+                configMapKeyRef:
+                  key: min_heap
+                  name: abrokes-bitbucket-jvm-config
+            - name: JVM_MAXIMUM_MEMORY
+              valueFrom:
+                configMapKeyRef:
+                  key: max_heap
+                  name: abrokes-bitbucket-jvm-config
+            - name: JVM_SUPPORT_RECOMMENDED_ARGS
+              valueFrom:
+                configMapKeyRef:
+                  key: additional_jvm_args
+                  name: abrokes-bitbucket-jvm-config
+            - name: PLUGIN_SSH_BASEURL
+              value: ssh://abrokes-bitbucket-ssh.dcngkube.bbsperf.com/
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sh", "-c", "/shutdown-wait.sh"]
+        
+        
+        
+      nodeSelector:
+        node_purpose: ci
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app.kubernetes.io/instance: abrokes-bitbucket-nfs
+            topologyKey: topology.kubernetes.io/zone
+      volumes:
+        
+        
+        - name: shared-home
+          persistentVolumeClaim:
+            claimName: abrokes-bitbucket-shared-home
+        
+        
+        
+        
+        
+  
+  
+  volumeClaimTemplates:
+  - metadata:
+      name: local-home
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+---
+# Source: bitbucket/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: abrokes-bitbucket
+  labels:
+    helm.sh/chart: bitbucket-1.0.0
+    app.kubernetes.io/name: bitbucket
+    app.kubernetes.io/instance: abrokes-bitbucket
+    app.kubernetes.io/version: "7.15.1-jdk11"
+    app.kubernetes.io/managed-by: Helm
+    
+  annotations:
+    "kubernetes.io/ingress.class": nginx
+  
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:eu-west-1:342470128466:certificate/945e344c-2eb8-49ee-8612-dfc8cddc8b28
+    alb.ingress.kubernetes.io/healthcheck-path: /status
+    alb.ingress.kubernetes.io/target-group-attributes: stickiness.enabled=true,stickiness.lb_cookie.duration_seconds=86400
+    alb.ingress.kubernetes.io/target-type: ip
+    external-dns.alpha.kubernetes.io/hostname: abrokes-bitbucket.dcngkube.bbsperf.com
+    kubernetes.io/ingress.class: alb
+spec:
+
+  rules:
+    - host: abrokes-bitbucket.dcngkube.bbsperf.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: abrokes-bitbucket
+                port:
+                  number: 80
+

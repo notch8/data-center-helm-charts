@@ -1,0 +1,73 @@
+affinity:
+  podAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+    - labelSelector:
+        matchLabels:
+          app.kubernetes.io/instance: abrokes-bitbucket-nfs
+      topologyKey: topology.kubernetes.io/zone
+bitbucket:
+  additionalEnvironmentVariables:
+  - name: PLUGIN_SSH_BASEURL
+    value: ssh://abrokes-bitbucket-ssh.dcngkube.bbsperf.com/
+  additionalJvmArgs:
+  - -Dfeature.getting.started.page=false
+  - -XX:ActiveProcessorCount=2
+  clustering:
+    enabled: true
+  elasticSearch:
+    baseUrl: http://abrokes-bitbucket-elasticsearch-master:9200
+  license:
+    secretName: bitbucket-license
+  resources:
+    container:
+      requests:
+        memory: 3G
+  sshService:
+    annotations:
+      external-dns.alpha.kubernetes.io/hostname: abrokes-bitbucket-ssh.dcngkube.bbsperf.com
+      service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
+      service.beta.kubernetes.io/aws-load-balancer-scheme: internal
+      service.beta.kubernetes.io/aws-load-balancer-type: external
+    enabled: true
+  sysadminCredentials:
+    secretName: bitbucket-sysadmin-credentials
+database:
+  credentials:
+    secretName: bitbucket-database-credentials
+  driver: org.postgresql.Driver
+  url: jdbc:postgresql://abrokes-bitbucket-pgsql:5432/bitbucket
+image:
+  pullPolicy: Always
+ingress:
+  annotations:
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:eu-west-1:342470128466:certificate/945e344c-2eb8-49ee-8612-dfc8cddc8b28
+    alb.ingress.kubernetes.io/healthcheck-path: /status
+    alb.ingress.kubernetes.io/target-group-attributes: stickiness.enabled=true,stickiness.lb_cookie.duration_seconds=86400
+    alb.ingress.kubernetes.io/target-type: ip
+    external-dns.alpha.kubernetes.io/hostname: abrokes-bitbucket.dcngkube.bbsperf.com
+    kubernetes.io/ingress.class: alb
+  create: true
+  host: abrokes-bitbucket.dcngkube.bbsperf.com
+  nginx: false
+nodeSelector:
+  node_purpose: ci
+replicaCount: 2
+serviceAccount:
+  imagePullSecrets:
+  - name: regcred
+volumes:
+  localHome:
+    persistentVolumeClaim:
+      create: true
+  sharedHome:
+    nfsPermissionFixer:
+      enabled: true
+    persistentVolume:
+      create: true
+      nfs:
+        path: /srv/nfs
+        server: 172.20.212.65
+    persistentVolumeClaim:
+      create: true
+      storageClassName: ""
+      volumeName: abrokes-bitbucket-shared-home-pv

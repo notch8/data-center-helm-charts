@@ -76,7 +76,7 @@ spec:
     type: RollingUpdate
     rollingUpdate:
       partition: 0
-  podManagementPolicy: Parallel
+  podManagementPolicy: OrderedReady
   serviceName: unittest-bitbucket
   selector:
     matchLabels:
@@ -193,42 +193,4 @@ spec:
           STATUS=$(curl -s "$STATUS_URL")
           echo "Verifying application state is RUNNING or FIRST_RUN: $STATUS"
           echo $STATUS | jq -e '.state|test("RUNNING|FIRST_RUN")'
-  restartPolicy: Never
----
-# Source: bitbucket/templates/tests/test-shared-home-permissions.yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: "unittest-bitbucket-shared-home-permissions-test"
-  annotations:
-    "helm.sh/hook": test
-    "helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded"
-  labels:
-    helm.sh/chart: bitbucket-1.0.0
-    app.kubernetes.io/name: bitbucket
-    app.kubernetes.io/instance: unittest-bitbucket
-    app.kubernetes.io/version: "7.15.1-jdk11"
-    app.kubernetes.io/managed-by: Helm
-spec:
-  containers:
-    - name: test
-      image: debian:stable-slim
-      imagePullPolicy: IfNotPresent
-      securityContext:
-        # We assume that the UID and GID used by the product images are the same, which in practice they are
-        runAsUser: 2003
-        runAsGroup: 2003
-      volumeMounts:
-        - name: shared-home
-          mountPath: /shared-home
-      command:
-        - /bin/sh
-        - -ec
-        - |
-          ls -ld /shared-home
-          echo "Creating temporary file in shared home as user $(id -u):$(id -g)"
-          touch /shared-home/permissions-test
-          ls -l /shared-home/permissions-test
-          rm /shared-home/permissions-test
-  volumes:
   restartPolicy: Never

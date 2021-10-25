@@ -1,3 +1,4 @@
+{{- if and .Values.volumes.sharedHome.nfsPermissionFixer.enabled (or .Values.volumes.sharedHome.persistentVolumeClaim.create .Values.volumes.sharedHome.customVolume) }}
 apiVersion: v1
 kind: Pod
 metadata:
@@ -47,3 +48,4 @@ spec:
   volumes:
     {{ include "bitbucket.volumes.sharedHome" . | nindent 4 }}
   restartPolicy: Never
+  {{- end }}

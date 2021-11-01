@@ -1,0 +1,13 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: bamboo-perf-test-k8s-cluster 
+  region: eu-central-1 
+
+managedNodeGroups:
+  - name: bamboo
+    instanceType: m5.4xlarge
+    desiredCapacity: 2
+    ssh: 
+      enableSsm: true

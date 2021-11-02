@@ -1,4 +1,4 @@
-# Agent addinity
+# Agent affinity
 
 to schedule `55` agents to the same node we use affinity. The node is first labelled i.e.
 

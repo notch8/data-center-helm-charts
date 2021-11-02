@@ -34,7 +34,16 @@ deploy_bamboo() {
   helm install bamboo --values src/main/charts/bamboo/values.yaml src/main/charts/bamboo
 }
 
+add_dataset() {
+  sleep 30
+  echo "Adding dataset..."
+  kubectl exec bamboo-0 -- apt update
+  kubectl exec bamboo-0 -- apt install wget
+  kubectl exec bamboo-0 -- wget https://centaurus-datasets.s3.us-east-2.amazonaws.com/bamboo/dcapt_bamboo.zip
+}
+
 nuke_running_deployments
 clean_shared_home
 provision_db
-#deploy_bamboo
+deploy_bamboo
+add_dataset

@@ -100,7 +100,7 @@ database:
    # - 'jdbc:oracle:thin:@<dbhost>:1521:<SID>'
   # https://atlassian.github.io/data-center-helm-charts/userguide/CONFIGURATION/#databaseurl
   #
-  url: "jdbc:postgresql://bamboo-perf-testing.c4uapnzsimvr.eu-central-1.rds.amazonaws.com:5432/bamboo"
+  url: "jdbc:postgresql://postgres-db.bamboo.svc.cluster.local:5432/bamboo"
 
   # JDBC connection credentials
   # 
@@ -164,7 +164,7 @@ volumes:
       #
       resources:
         requests:
-          storage: 100Gi
+          storage: 1Gi
           
     # -- Static provisioning of local-home using K8s PVs and PVCs
     #
@@ -225,10 +225,10 @@ volumes:
     # https://kubernetes.io/docs/concepts/storage/persistent-volumes/#static
     # https://atlassian.github.io/data-center-helm-charts/examples/storage/aws/SHARED_STORAGE/
     #
-    customVolume: {}
-    # persistentVolumeClaim:
-    #   claimName: "<pvc>"
-    
+    customVolume:
+      persistentVolumeClaim:
+        claimName: "shared-home-claim"
+
     # -- Specifies the path in the Bamboo container to which the shared-home volume will be 
     # mounted.
     #
@@ -247,7 +247,7 @@ volumes:
       # can write to it. This is a workaround for a K8s bug affecting NFS volumes: 
       # https://github.com/kubernetes/examples/issues/260
       #
-      enabled: false
+      enabled: true
       
       # -- The path in the K8s initContainer where the shared-home volume will be mounted
       #
@@ -308,7 +308,7 @@ ingress:
   # this hostname will be routed by the Ingress Resource to the appropriate backend 
   # Service.
   #
-  host: "bamboo-perf-testing-k8s.deplops.com"
+  host: "bamboo-k8s.deplops.com"
 
   # -- The base path for the Ingress Resource. For example '/bamboo'. Based on a 
   # 'ingress.host' value of 'company.k8s.com' this would result in a URL of 
@@ -469,11 +469,11 @@ bamboo:
       
       # -- The maximum amount of heap memory that will be used by the Bamboo JVM
       #
-      maxHeap: "16g"
+      maxHeap: "1024m"
       
       # -- The minimum amount of heap memory that will be used by the Bamboo JVM
       #
-      minHeap: "4g"
+      minHeap: "512m"
       
     # Specifies the standard K8s resource requests and/or limits for the Bamboo 
     # container. It is important that if the memory resources are specified here, 
@@ -487,11 +487,11 @@ bamboo:
       
         # -- Initial CPU request by Bamboo pod
         #
-        cpu: "15" # If changing the cpu value update 'ActiveProcessorCount' below
+        cpu: "2" # If changing the cpu value update 'ActiveProcessorCount' below
         
         # -- Initial Memory request by Bamboo pod
         #
-        memory: "63G"
+        memory: "2G"
       #  limits:
       #    cpu: "2"
       #    memory: "2G"
@@ -505,7 +505,7 @@ bamboo:
     # for 'container.requests.cpu'.
     # https://docs.oracle.com/en/java/javase/11/tools/java.html#GUID-3B1CE181-CD30-4178-9602-230B800D4FAE
     #
-    - -XX:ActiveProcessorCount=15
+    - -XX:ActiveProcessorCount=2
 
   # -- Specifies a list of additional Java libraries that should be added to the
   # Bamboo container. Each item in the list should specify the name of the volume

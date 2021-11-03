@@ -40,15 +40,15 @@ image:
   # https://hub.docker.com/r/atlassian/bamboo-server
   #
   repository: atlassian/bamboo
-  
+
   # -- Image pull policy
   #
   pullPolicy: IfNotPresent
-  
+
   # -- The docker image tag to be used - defaults to the Chart appVersion
   #
   tag: ""
-  
+
 # K8s ServiceAccount configuration. Give fine-grained identity and authorization 
 # to Pods
 #
@@ -58,14 +58,14 @@ serviceAccount:
   # already exists.
   #
   create: true
-  
+
   # -- The name of the ServiceAccount to be used by the pods. If not specified, but 
   # the "serviceAccount.create" flag is set to 'true', then the ServiceAccount name 
   # will be auto-generated, otherwise the 'default' ServiceAccount will be used.
   # https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#use-the-default-service-account-to-access-the-api-server
   #
   name:
-  
+
   # -- For Docker images hosted in private registries, define the list of image pull 
   # secrets that should be utilized by the created ServiceAccount
   # https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
@@ -79,33 +79,33 @@ serviceAccount:
 # database to use and its connection details.
 # https://atlassian.github.io/data-center-helm-charts/userguide/CONFIGURATION/#database-connectivity
 #
-database: 
+database:
 
   # -- The database type that should be used. If not specified, then it will need to be 
   # provided via the browser during manual configuration post deployment. Valid values 
   # include:
-   # - 'postgresql'
-   # - 'mysql'
-   # - 'oracle12c'
-   # - 'mssql'
+  # - 'postgresql'
+  # - 'mysql'
+  # - 'oracle12c'
+  # - 'mssql'
   # https://atlassian.github.io/data-center-helm-charts/userguide/CONFIGURATION/#databasetype
   #
-  type: "postgresql" 
-  
-  # -- The jdbc URL of the database. If not specified, then it will need to be provided 
-  # via the browser during manual configuration post deployment. Example URLs include:
-   # - 'jdbc:postgresql://<dbhost>:5432/<dbname>'
-   # - 'jdbc:mysql://<dbhost>/<dbname>'
-   # - 'jdbc:sqlserver://<dbhost>:1433;databaseName=<dbname>'
-   # - 'jdbc:oracle:thin:@<dbhost>:1521:<SID>'
+  type: "postgresql"
+
+    # -- The jdbc URL of the database. If not specified, then it will need to be provided 
+    # via the browser during manual configuration post deployment. Example URLs include:
+    # - 'jdbc:postgresql://<dbhost>:5432/<dbname>'
+    # - 'jdbc:mysql://<dbhost>/<dbname>'
+  # - 'jdbc:sqlserver://<dbhost>:1433;databaseName=<dbname>'
+  # - 'jdbc:oracle:thin:@<dbhost>:1521:<SID>'
   # https://atlassian.github.io/data-center-helm-charts/userguide/CONFIGURATION/#databaseurl
   #
-  url: "jdbc:postgresql://postgres-db.bamboo.svc.cluster.local:5432/bamboo"
+  url: "jdbc:postgresql://bamboo-perf-testing.c4uapnzsimvr.eu-central-1.rds.amazonaws.com:5432/bamboo"
 
   # JDBC connection credentials
   # 
   credentials:
-  
+
     # -- The name of the K8s Secret that contains the database login credentials.
     # If the secret is specified, then the credentials will be automatically utilised on 
     # Bamboo startup. If the secret is not provided, then the credentials will need to be 
@@ -121,7 +121,7 @@ database:
     # -- The key ('username') in the Secret used to store the database login username
     #
     usernameSecretKey: username
-    
+
     # -- The key ('password') in the Secret used to store the database login password
     #
     passwordSecretKey: password
@@ -141,14 +141,14 @@ volumes:
   # https://confluence.atlassian.com/bamboo/installing-bamboo-data-center-1063170560.html
   # 
   localHome:
-  
+
     # Dynamic provisioning of local-home using the K8s Storage Classes
     #
     # https://kubernetes.io/docs/concepts/storage/persistent-volumes/#dynamic
     # https://atlassian.github.io/data-center-helm-charts/examples/storage/aws/LOCAL_STORAGE/
     #
     persistentVolumeClaim:
-    
+
       # -- If 'true', then a 'PersistentVolume' and 'PersistentVolumeClaim' will be dynamically 
       # created for each pod based on the 'StorageClassName' supplied below.
       #          
@@ -164,8 +164,8 @@ volumes:
       #
       resources:
         requests:
-          storage: 1Gi
-          
+          storage: 100Gi
+
     # -- Static provisioning of local-home using K8s PVs and PVCs
     #
     # NOTE: Due to the ephemeral nature of pods this approach to provisioning volumes for 
@@ -181,41 +181,41 @@ volumes:
     customVolume: {}
     # persistentVolumeClaim:
     #   claimName: "<pvc>" 
-    
+
     # -- Specifies the path in the Bamboo container to which the local-home volume will be
     # mounted.
     #
     mountPath: "/var/atlassian/application-data/bamboo"
-    
+
   # A volume for 'shared-home' is required by Bamboo to effectively operate in multi-node 
   # environment
   # https://confluence.atlassian.com/bamboo/bamboo-data-center-requirements-1063170547.html#BambooDataCenterrequirements-Sharedfilesystem
   #
   sharedHome:
-  
+
     # Dynamic provisioning of local-home using the K8s Storage Classes
     #
     # https://kubernetes.io/docs/concepts/storage/persistent-volumes/#dynamic
     #
     persistentVolumeClaim:
-    
+
       # -- If 'true', then a 'PersistentVolumeClaim' and 'PersistentVolume' will be dynamically 
       # created for shared-home based on the 'StorageClassName' supplied below.
       #
       create: false
-      
+
       # -- Specify the name of the 'StorageClass' that should be used for the 'shared-home' 
       #volume claim.
       #
       storageClassName:
-      
+
       # -- Specifies the standard K8s resource requests and/or limits for the shared-home 
       # volume claims.
       #
       resources:
         requests:
           storage: 1Gi
-          
+
     # -- Static provisioning of shared-home using K8s PVs and PVCs
     #
     # When 'persistentVolumeClaim.create' is 'false', then this value can be used to define 
@@ -225,47 +225,47 @@ volumes:
     # https://kubernetes.io/docs/concepts/storage/persistent-volumes/#static
     # https://atlassian.github.io/data-center-helm-charts/examples/storage/aws/SHARED_STORAGE/
     #
-    customVolume:
-      persistentVolumeClaim:
-        claimName: "shared-home-claim"
+    customVolume: {}
+    # persistentVolumeClaim:
+    #   claimName: "<pvc>"
 
     # -- Specifies the path in the Bamboo container to which the shared-home volume will be 
     # mounted.
     #
     mountPath: "/var/atlassian/application-data/shared-home"
-    
+
     # -- Specifies the sub-directory of the shared-home volume that will be mounted in to the 
     # Bamboo container.
     #
     subPath:
-    
+
     # Modify permissions on shared-home
     #
     nfsPermissionFixer:
-    
+
       # -- If 'true', this will alter the shared-home volume's root directory so that Bamboo 
       # can write to it. This is a workaround for a K8s bug affecting NFS volumes: 
       # https://github.com/kubernetes/examples/issues/260
       #
-      enabled: true
-      
+      enabled: false
+
       # -- The path in the K8s initContainer where the shared-home volume will be mounted
       #
       mountPath: "/shared-home"
-      
+
       # -- By default, the fixer will change the group ownership of the volume's root directory 
       # to match the Bamboo container's GID (2001), and then ensures the directory is 
       # group-writeable. If this is not the desired behaviour, command used can be specified 
       # here.
       #
       command:
-      
+
   # -- Defines additional volumes that should be applied to all Bamboo pods.
   # Note that this will not create any corresponding volume mounts;
   # those needs to be defined in bamboo.additionalVolumeMounts
   #
   additional: []
-  
+
 # Ingress configuration 
 #
 # To make the Atlassian product available from outside of the K8s cluster an Ingress 
@@ -287,7 +287,7 @@ ingress:
   # which of them is used for Atlassian application traffic.
   #
   className: "nginx"
-  
+
   # -- Set to 'true' if the Ingress Resource is to use the K8s 'ingress-nginx' 
   # controller. 
   # https://kubernetes.github.io/ingress-nginx/
@@ -298,24 +298,24 @@ ingress:
   # be specified below under 'ingress.annotations'.
   #
   nginx: true
-  
+
   # -- The max body size to allow. Requests exceeding this size will result
   # in an HTTP 413 error being returned to the client.
   #
   maxBodySize: 250m
-  
+
   # -- The fully-qualified hostname (FQDN) of the Ingress Resource. Traffic coming in on 
   # this hostname will be routed by the Ingress Resource to the appropriate backend 
   # Service.
   #
-  host: "bamboo-k8s.deplops.com"
+  host: "bamboo-perf-testing-k8s.deplops.com"
 
   # -- The base path for the Ingress Resource. For example '/bamboo'. Based on a 
   # 'ingress.host' value of 'company.k8s.com' this would result in a URL of 
   # 'company.k8s.com/bamboo'. Default value is 'bamboo.service.contextPath'
   #
   path:
-  
+
   # -- The custom annotations that should be applied to the Ingress Resource 
   # when NOT using the K8s ingress-nginx controller.
   #
@@ -326,7 +326,7 @@ ingress:
   # (HTTPS) enforced.
   #
   https: true
-  
+
   # -- The name of the K8s Secret that contains the TLS private key and corresponding 
   # certificate. When utilised, TLS termination occurs at the ingress point where 
   # traffic to the Service and it's Pods is in plaintext. 
@@ -341,19 +341,19 @@ ingress:
 # Bamboo configuration 
 #
 bamboo:
-  
+
   # K8s Service configuration
   #
   service:
-  
+
     # -- The port on which the Bamboo K8s Service will listen
     #
     port: 80
-    
+
     # -- The type of K8s service to use for Bamboo
     #
     type: ClusterIP
-    
+
     # -- The Tomcat context path that Bamboo will use. The ATL_TOMCAT_CONTEXTPATH 
     # will be set automatically.
     #
@@ -362,7 +362,7 @@ bamboo:
     # -- Additional annotations to apply to the Service
     #
     annotations: {}
-    
+
   # Standard K8s field that holds pod-level security attributes and common container settings.
   # https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
   # Do not populate when deploying to OpenShift, unless anyuid policy is attached to a service account.
@@ -388,29 +388,29 @@ bamboo:
   # Port definitions
   #
   ports:
-  
+
     # -- The port on which the Bamboo container listens for HTTP traffic
     #
     http: 8085
-    
+
     # -- JMS port
     #
     jms: 54663
-     
+
   # Confirm that Bamboo is up and running with a ReadinessProbe
   # https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-readiness-probes
   #
   readinessProbe:
-  
+
     # -- The initial delay (in seconds) for the Bamboo container readiness probe, 
     # after which the probe will start running.
     #
     initialDelaySeconds: 10
-    
+
     # -- How often (in seconds) the Bamboo container readiness probe will run
     #
     periodSeconds: 5
-    
+
     # -- The number of consecutive failures of the Bamboo container readiness probe 
     # before the pod fails readiness checks.
     #
@@ -419,12 +419,12 @@ bamboo:
   # Bamboo log configuration 
   #
   accessLog:
-  
+
     # -- The path within the Bamboo container where the local-home volume should be 
     # mounted in order to capture access logs.
     #
     mountPath: "/opt/atlassian/bamboo/logs"
-    
+
     # -- The subdirectory within the local-home volume where access logs should be 
     # stored.
     #
@@ -433,7 +433,7 @@ bamboo:
   # Data Center clustering
   #
   clustering:
-  
+
     # -- Set to 'true' if Data Center clustering should be enabled
     # This will automatically configure cluster peer discovery between cluster nodes.
     #
@@ -460,21 +460,21 @@ bamboo:
   # Pod resource requests 
   #
   resources:
-  
+
     # JVM Memory / Heap Size definitions. These values below are based on the 
     # defaults defined for the Bamboo docker container.
     # https://bitbucket.org/atlassian-docker/docker-bamboo-server/src/master
     #
     jvm:
-      
+
       # -- The maximum amount of heap memory that will be used by the Bamboo JVM
       #
-      maxHeap: "1024m"
-      
+      maxHeap: "16g"
+
       # -- The minimum amount of heap memory that will be used by the Bamboo JVM
       #
-      minHeap: "512m"
-      
+      minHeap: "4g"
+
     # Specifies the standard K8s resource requests and/or limits for the Bamboo 
     # container. It is important that if the memory resources are specified here, 
     # they must allow for the size of the Bamboo JVM. That means the maximum heap 
@@ -482,16 +482,16 @@ bamboo:
     # Allowing for (maxHeap)*1.5 would be an example.
     #
     container:
-      
+
       requests:
-      
+
         # -- Initial CPU request by Bamboo pod
         #
-        cpu: "2" # If changing the cpu value update 'ActiveProcessorCount' below
-        
+        cpu: "15" # If changing the cpu value update 'ActiveProcessorCount' below
+
         # -- Initial Memory request by Bamboo pod
         #
-        memory: "2G"
+        memory: "63G"
       #  limits:
       #    cpu: "2"
       #    memory: "2G"
@@ -500,12 +500,12 @@ bamboo:
   # system properties.
   #
   additionalJvmArgs:
-  
+
     # -- The value defined for ActiveProcessorCount should correspond to that provided 
     # for 'container.requests.cpu'.
     # https://docs.oracle.com/en/java/javase/11/tools/java.html#GUID-3B1CE181-CD30-4178-9602-230B800D4FAE
     #
-    - -XX:ActiveProcessorCount=2
+    - -XX:ActiveProcessorCount=15
 
   # -- Specifies a list of additional Java libraries that should be added to the
   # Bamboo container. Each item in the list should specify the name of the volume
@@ -559,7 +559,7 @@ fluentd:
   # -- Set to 'true' if the Fluentd sidecar (DaemonSet) should be added to each pod
   #
   enabled: false
-  
+
   # -- The Fluentd sidecar image
   #
   imageName: fluent/fluentd-kubernetes-daemonset:v1.11.5-debian-elasticsearch7-1.2
@@ -573,17 +573,17 @@ fluentd:
   # for instance SIGTERM. An example of how such a command may look is:
   # "<command 1> && <command 2> && exec <primary command>"
   command:
-  
+
   # -- Set to 'true' if a custom config (see 'configmap-fluentd.yaml' for default) 
   # should be used for Fluentd. If enabled this config must supplied via the 
   # 'fluentdCustomConfig' property below.
   #
   customConfigFile: false
-  
+
   # -- Custom fluent.conf file
   #
   fluentdCustomConfig: {}
-  # fluent.conf: |
+    # fluent.conf: |
     # <source>
     #   @type tail
     #   <parse>
@@ -592,29 +592,29 @@ fluentd:
     #   </parse>
     #   path /opt/atlassian/bamboo/logs/access_log.*
     #   pos_file /tmp/bamboolog.pos
-    #   tag bamboo-access-logs
-    # </source>
-  
+  #   tag bamboo-access-logs
+  # </source>
+
   # -- The port on which the Fluentd sidecar will listen
   #
   httpPort: 9880
-  
+
   # Elasticsearch config based on your ELK stack
   #
   elasticsearch:
-  
+
     # -- Set to 'true' if Fluentd should send all log events to an Elasticsearch service.
     #
     enabled: true
-    
+
     # -- The hostname of the Elasticsearch service that Fluentd should send logs to.
     #
     hostname: elasticsearch
-    
+
     # -- The prefix of the Elasticsearch index name that will be used
     #
     indexNamePrefix: bamboo
-    
+
   # -- Specify custom volumes to be added to Fluentd container (e.g. more log sources)
   #
   extraVolumes: []
@@ -622,8 +622,8 @@ fluentd:
   #   mountPath: /opt/atlassian/bamboo/logs
   #   subPath: log
   #   readOnly: true
-  
-  
+
+
 # -- Custom annotations that will be applied to all Bamboo pods
 #
 podAnnotations: {}
@@ -667,14 +667,14 @@ additionalInitContainers: []
 # -- Additional labels that should be applied to all resources
 #
 additionalLabels: {}
-#  name: <value>
+  #  name: <value>
 
-# -- Additional existing ConfigMaps and Secrets not managed by Helm that should be 
-# mounted into service container. Configuration details below (camelCase is important!):
+  # -- Additional existing ConfigMaps and Secrets not managed by Helm that should be 
+  # mounted into service container. Configuration details below (camelCase is important!):
   # 'name'      - References existing ConfigMap or secret name.
   # 'type'      - 'configMap' or 'secret'
-  # 'key'       - The file name.
-  # 'mountPath' - The destination directory in a container.
+# 'key'       - The file name.
+# 'mountPath' - The destination directory in a container.
 # VolumeMount and Volumes are added with this name and index position, for example; 
 # custom-config-0, keystore-2
 #

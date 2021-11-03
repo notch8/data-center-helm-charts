@@ -22,3 +22,8 @@ affinity:
               values:
                 - agent
 ```
+
+# Bamboo server license
+Ensure the license is created with `100` as the `Edition` this will create a license that can accomodate up to 100 agents 
+
+![img.png](img.png)

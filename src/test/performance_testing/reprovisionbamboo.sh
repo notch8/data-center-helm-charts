@@ -43,7 +43,7 @@ add_dataset() {
 }
 
 nuke_running_deployments
-clean_shared_home
+#clean_shared_home
 provision_db
 deploy_bamboo
-add_dataset
+#add_dataset

@@ -16,7 +16,7 @@
 
 # -- The initial number of Bamboo agent pods that should be started at deployment time. 
 #
-replicaCount: 1
+replicaCount: 55
 
 # Image configuration 
 #
@@ -75,14 +75,14 @@ agent:
     # 'kubectl create secret generic <secret-name> --from-literal=security-token=<security token>'
     # https://kubernetes.io/docs/concepts/configuration/secret/#opaque-secrets
     #
-    secretName:
+    secretName: security-token
       
     secretKey: security-token
     
   # The K8s DNS record for the Bamboo server service. Should be of the form, <service_name>.<namespace>.svc.cluster.local
   # for example: "bamboo-server.bamboo.svc.cluster.local"
   #
-  server:
+  server: "bamboo.bamboo.svc.cluster.local"
 
   # Standard K8s field that holds pod-level security attributes and common container settings.
   # https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
@@ -198,11 +198,11 @@ agent:
       
         # -- Initial CPU request by Bamboo agent pod
         #
-        cpu: "1" # If changing the cpu value update 'ActiveProcessorCount' below
+        cpu: "0.25" # If changing the cpu value update 'ActiveProcessorCount' below
         
         # -- Initial Memory request by Bamboo agent pod
         #
-        memory: "2G"
+        memory: "512m"
       #  limits:
       #    cpu: "2"
       #    memory: "2G"
@@ -233,8 +233,15 @@ tolerations: []
 
 # -- Standard K8s affinities that will be applied to all Bamboo agent pods
 #
-affinity: {}
-#  name: <value>
+#affinity:
+#  nodeAffinity:
+#    requiredDuringSchedulingIgnoredDuringExecution:
+#      nodeSelectorTerms:
+#        - matchExpressions:
+#            - key: eks.amazonaws.com/nodegroup
+#              operator: In
+#              values:
+#                - agent
 
 # -- Standard K8s schedulerName that will be applied to all Bamboo agent pods.
 # Check Kubernetes documentation on how to configure multiple schedulers:
